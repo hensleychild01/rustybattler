@@ -1,3 +1,3 @@
 # rustybattler
 
-ts is supposed to be a battleship bot written in Rust
+ts is supposed to be a chess bot written in Rust
