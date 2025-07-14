@@ -18,5 +18,5 @@ ts is supposed to be a chess bot written in Rust
 
 ## Resources
 
-- [https://www.youtube.com/watch?v=U4ogK0MIzqk](Sebastian Lague's "Coding Adventure: Chess" on YouTube)
-- [https://chessprogramming.org](The Chess Programming Wiki)
+- [Sebastian Lague's "Coding Adventure: Chess" on YouTube](https://www.youtube.com/watch?v=U4ogK0MIzqk)
+- [The Chess Programming Wiki](https://chessprogramming.org)
