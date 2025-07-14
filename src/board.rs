@@ -1,4 +1,5 @@
 use crate::enums::{Color, PieceType};
+use crate::Bitboard;
 
 #[derive(Copy, Clone)]
 pub struct Square {
@@ -14,17 +15,17 @@ pub struct Board {
     pub halfmove_clock: i32,
     pub castling_rights: u8,
 
-    pub pawn_bbs: [u64; 2],
-    pub knight_bbs: [u64; 2],
-    pub bishop_bbs: [u64; 2],
-    pub rook_bbs: [u64; 2],
-    pub queen_bbs: [u64; 2],
-    pub king_bbs: [u64; 2],
+    pub pawn_bbs: [Bitboard; 2],
+    pub knight_bbs: [Bitboard; 2],
+    pub bishop_bbs: [Bitboard; 2],
+    pub rook_bbs: [Bitboard; 2],
+    pub queen_bbs: [Bitboard; 2],
+    pub king_bbs: [Bitboard; 2],
 
     pub mailbox: [Square; 64],
 
-    pub white_bb: u64,
-    pub black_bb: u64,
+    pub white_bb: Bitboard,
+    pub black_bb: Bitboard,
 }
 
 pub static STARTING_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -90,7 +91,7 @@ impl Board {
                 let color_idx = if is_white { 0 } else { 1 };
 
                 let mailbox_idx = (rank * 8 + file) as usize;
-                let index: u64 = (1 as u64) << mailbox_idx;
+                let index: Bitboard = (1 as Bitboard) << mailbox_idx;
 
                 if is_white {
                     self.white_bb |= index;
