@@ -2,6 +2,7 @@ pub type Bitboard = u64;
 
 pub trait BitboardExt {
     fn print(&self);
+    fn count(&self) -> i32;
 }
 
 impl BitboardExt for Bitboard {
@@ -29,5 +30,12 @@ impl BitboardExt for Bitboard {
 
         s += "  a  b  c  d  e  f  g  h";
         println!("{s}");
+    }
+    fn count(&self) -> i32 {
+        let mut count = 0;
+        for i in 0..64 {
+            if (*self & (1 << i)) > 0 { count += 1; }
+        }
+        count
     }
 }

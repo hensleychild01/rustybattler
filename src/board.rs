@@ -30,26 +30,26 @@ pub struct Board {
 
 pub static STARTING_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-pub fn get_empty_board() -> Board {
-    return Board {
-        wtm: true,
-        reversables: 0,
-        halfmove_clock: 0,
-        castling_rights: 0b1111,
-        pawn_bbs: [0; 2],
-        knight_bbs: [0; 2],
-        bishop_bbs: [0; 2],
-        rook_bbs: [0; 2],
-        queen_bbs: [0; 2],
-        king_bbs: [0; 2],
-        mailbox: [Square{piece: PieceType::None, color:Color::None}; 64],
-        white_bb: 0,
-        black_bb: 0,
-    };
-}
-
 // a1-h8
 impl Board {
+    pub fn get_empty_board() -> Self {
+        return Self {
+            wtm: true,
+            reversables: 0,
+            halfmove_clock: 0,
+            castling_rights: 0b1111,
+            pawn_bbs: [0; 2],
+            knight_bbs: [0; 2],
+            bishop_bbs: [0; 2],
+            rook_bbs: [0; 2],
+            queen_bbs: [0; 2],
+            king_bbs: [0; 2],
+            mailbox: [Square{piece: PieceType::None, color:Color::None}; 64],
+            white_bb: 0,
+            black_bb: 0,
+        };
+}
+
     pub fn init(&mut self) {
         self.load_fen(STARTING_FEN);
     }
