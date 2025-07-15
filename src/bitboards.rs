@@ -3,6 +3,7 @@ pub type Bitboard = u64;
 pub trait BitboardExt {
     fn print(&self);
     fn count(&self) -> i32;
+    fn pop_lsb(&mut self) -> u8;
 }
 
 impl BitboardExt for Bitboard {
@@ -18,9 +19,8 @@ impl BitboardExt for Bitboard {
                 }
 
                 if (*self & bit) > 0 {
-                    s += " # "; 
-                }
-                else {
+                    s += " # ";
+                } else {
                     s += " . ";
                 }
             }
@@ -34,8 +34,15 @@ impl BitboardExt for Bitboard {
     fn count(&self) -> i32 {
         let mut count = 0;
         for i in 0..64 {
-            if (*self & (1 << i)) > 0 { count += 1; }
+            if (*self & (1 << i)) > 0 {
+                count += 1;
+            }
         }
         count
+    }
+    fn pop_lsb(&mut self) -> u8 {
+        let trailers = self.trailing_zeros() as u8;
+        *self ^= (1 as u64) << trailers;
+        trailers
     }
 }

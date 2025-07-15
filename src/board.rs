@@ -1,10 +1,16 @@
+use crate::bitboards::Bitboard;
 use crate::enums::{Color, PieceType};
-use crate::Bitboard;
 
 #[derive(Copy, Clone)]
 pub struct Square {
     pub piece: PieceType,
     pub color: Color,
+}
+
+pub fn idx_to_file_rank(idx: u8) -> (u8, u8) {
+    let file = (idx as u8) & (7 as u8); 
+    let rank = (idx as u8) << 3;
+    (file, rank)
 }
 
 #[derive(Clone, Copy)]
@@ -44,11 +50,14 @@ impl Board {
             rook_bbs: [0; 2],
             queen_bbs: [0; 2],
             king_bbs: [0; 2],
-            mailbox: [Square{piece: PieceType::None, color:Color::None}; 64],
+            mailbox: [Square {
+                piece: PieceType::None,
+                color: Color::None,
+            }; 64],
             white_bb: 0,
             black_bb: 0,
         };
-}
+    }
 
     pub fn init(&mut self) {
         self.load_fen(STARTING_FEN);

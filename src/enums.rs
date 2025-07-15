@@ -1,17 +1,17 @@
 #[derive(Clone, Copy)]
 pub enum PieceType {
     None,
-    Pawn, 
+    Pawn,
     Knight,
     Bishop,
     Rook,
     Queen,
-    King
+    King,
 }
 
 #[derive(Copy, Clone)]
 pub enum Color {
     None,
     White,
-    Black
+    Black,
 }
