@@ -9,7 +9,7 @@ pub struct Square {
 
 pub fn idx_to_file_rank(idx: u8) -> (u8, u8) {
     let file = (idx as u8) & (7 as u8); 
-    let rank = (idx as u8) << 3;
+    let rank = (idx as u8) >> 3;
     (file, rank)
 }
 
