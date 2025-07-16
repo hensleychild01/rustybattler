@@ -4,10 +4,11 @@ mod enums;
 mod move_generation;
 mod attack_vectors;
 
-use crate::{attack_vectors::{AVExt, AttackVector, CROWNIES_AVECS, HORSEY_AVECS}, bitboards::{Bitboard, BitboardExt}};
+use crate::{attack_vectors::{AVExt, AttackVector, CROWNIES_AVECS, HORSEY_AVECS, PAWN_AVECS}, bitboards::{Bitboard, BitboardExt}};
 
 fn main() {
-    let i = 4;
+    
+    let i = 39;
     ((1 as Bitboard) << i).print();
-    CROWNIES_AVECS[i].print();
+    PAWN_AVECS[i].print();
 }
