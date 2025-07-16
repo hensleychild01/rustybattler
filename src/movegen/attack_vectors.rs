@@ -1,4 +1,4 @@
-use crate::{bitboards::Bitboard, board::idx_to_file_rank};
+use crate::bitboards::Bitboard;
 
 pub type AttackVector = [Bitboard; 64];
 
@@ -202,31 +202,3 @@ pub static PAWN_AVECS: AttackVector = [
     0,
     0,
 ];
-
-pub trait AVExt {
-    fn gib_pawn_avecs(&mut self);
-}
-
-impl AVExt for AttackVector {
-    fn gib_pawn_avecs(&mut self) {
-        let mut i = 0 as u8;
-        while i < 64 {
-            let mut bb = 0 as Bitboard;
-
-            let (file, rank) = idx_to_file_rank(i);
-            let index = (1 as u64) << i;
-
-            if rank != 7 {
-                if file != 0 {
-                    bb |= index << 7;
-                }
-                if file != 7 {
-                    bb |= index << 9;
-                }
-            }
-
-            self[i as usize] = bb;
-            i += 1;
-        }
-    }
-}
