@@ -1,7 +1,10 @@
-use crate::{board::Board, enums::{Color, PieceType}};
+use crate::{
+    board::Board,
+    enums::{Color, PieceType},
+};
 
 pub struct UnpackedMove {
-    from: u8, 
+    from: u8,
     to: u8,
 
     color: Color,
@@ -10,7 +13,7 @@ pub struct UnpackedMove {
     is_castle: bool,
 
     captured: PieceType,
-    promo_to: PieceType
+    promo_to: PieceType,
 }
 
 pub type Move = u32;
@@ -27,7 +30,7 @@ impl MoveListExt for MoveList {
     fn gen_knight_moves(&mut self, b: &Board) {
         let deref_board = *b;
 
-        let color = if deref_board.wtm {0} else {1};
+        let color = if deref_board.wtm { 0 } else { 1 };
         let our_knights = deref_board.knight_bbs[color];
     }
 }
