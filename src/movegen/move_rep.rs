@@ -3,23 +3,20 @@ use crate::{
     enums::{Color, PieceType},
 };
 
-pub struct UnpackedMove {
-    from: u8,
-    to: u8,
-
-    color: Color,
-
-    is_capture: bool,
-    is_castle: bool,
-
-    captured: PieceType,
-    promo_to: PieceType,
-}
-
 pub type Move = u32;
 // rightmost 6 bits are from-square, then 6 for to-square
 // then 3 bits for from-piece (mover), then 3 for to-piece (captured)
 //
+
+pub trait MoveExt {
+    fn new(from: u8, to: u8) -> Self;
+}
+
+impl MoveExt for Move {
+    fn new(from: u8, to: u8) -> Self {
+        from as u32 | ((to as u32) << 6)
+    }
+}
 
 pub type MoveList = Vec<Move>;
 

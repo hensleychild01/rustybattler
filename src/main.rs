@@ -12,7 +12,7 @@ fn main() {
     game.init();
 
     let mut moves: MoveList = vec![];
-    moves.gen_king_moves(&game, enums::Color::Black);
+    moves.gen_knight_moves(&game, enums::Color::Black);
 
     moves.print();
 }

@@ -4,7 +4,7 @@ use crate::{
     enums::Color,
     movegen::{
         attack_vectors::{HORSEY_AVECS, CROWNIES_AVECS},
-        move_rep::{Move, MoveList},
+        move_rep::{Move, MoveList, MoveExt},
     },
 };
 
@@ -25,17 +25,12 @@ impl MoveListExt for MoveList {
         while from > 0 {
             let mut not_blocked = HORSEY_AVECS[from] & !us;
 
-            let mut indices: Vec<u8> = vec![];
             let mut index = not_blocked.pop_lsb();
             while index > 0 {
-                indices.push(index as u8);
-                index = not_blocked.pop_lsb();
-            }
-
-            for to in indices {
-                // now we turn the bitboard into moves
-                let m: Move = (from as u32) | ((to as u32) << 6);
+                let to = index; 
+                let m = Move::new(from as u8, to as u8);
                 (*self).push(m);
+                index = not_blocked.pop_lsb();
             }
 
             from = knights.pop_lsb();
