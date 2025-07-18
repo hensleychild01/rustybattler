@@ -147,3 +147,10 @@ impl Board {
         }
     }
 }
+
+pub fn pretty_print_index(index: u8) -> String {
+    let (file, rank) = idx_to_file_rank(index);
+    let f = "abcdefgh".as_bytes()[file as usize] as char;
+    let r = char::from_digit(rank as u32 + 1, 10).unwrap();
+    return f.to_string() + &r.to_string();
+}
