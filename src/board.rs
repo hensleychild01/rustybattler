@@ -1,5 +1,7 @@
 use crate::bitboards::Bitboard;
 use crate::enums::{Color, PieceType};
+use crate::movegen::move_rep::MoveList;
+use crate::movegen::pseudolegals::MoveListExt;
 
 #[derive(Copy, Clone)]
 pub struct Square {
@@ -11,6 +13,10 @@ pub fn idx_to_file_rank(idx: u8) -> (u8, u8) {
     let file = (idx as u8) & (7 as u8); 
     let rank = (idx as u8) >> 3;
     (file, rank)
+}
+
+pub fn idx_from_file_rank(file: u8, rank: u8) -> u8 {
+    rank << 3 | file
 }
 
 #[derive(Clone, Copy)]
@@ -31,7 +37,7 @@ pub struct Board {
     pub mailbox: [Square; 64],
 
     pub white_bb: Bitboard,
-    pub black_bb: Bitboard,
+    pub black_bb: Bitboard
 }
 
 pub static STARTING_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -145,6 +151,20 @@ impl Board {
                 file += 1;
             }
         }
+    }
+
+    pub fn get_occupied_squares(&self) -> Bitboard {
+        self.white_bb | self.black_bb
+    }
+
+    pub fn get_moves(&self) -> MoveList {
+        let mut moves: MoveList = vec![];
+
+        moves.gen_knight_moves(self, if self.wtm {Color::White} else {Color::Black});
+        moves.gen_king_moves(self, if self.wtm {Color::White} else {Color::Black});
+        moves.gen_bishop_moves(self, if self.wtm {Color::White} else {Color::Black});
+
+        moves
     }
 }
 

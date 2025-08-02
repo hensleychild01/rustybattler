@@ -7,10 +7,11 @@ ts is supposed to be a chess bot written in Rust
 - [x] FEN string loader
 - [ ] Move generation
     - [x] Attack vectors
-    - [ ] Pseudolegal move generations
+    - [ ] Pseudolegal move generation
     - [ ] Make and unmake move functions
     - [ ] Legal move generation
 - [ ] Evaluation
+- [ ] Time management
 - [ ] Optimizations
     - [ ] Minimax
     - [ ] Alpha-beta pruning
