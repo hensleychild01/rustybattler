@@ -1,9 +1,9 @@
 use crate::{
     bitboards::{Bitboard, BitboardExt},
-    board::{Board, idx_from_file_rank, idx_to_file_rank},
+    board::{Board, idx_from_file_rank, idx_to_file_rank, pretty_print_index},
     enums::Color,
     movegen::{
-        attack_vectors::{BISHOP_AVECS, CROWNIES_AVECS, HORSEY_AVECS},
+        attack_vectors::{BISHOP_AVECS, CROWNIES_AVECS, HORSEY_AVECS, ROOK_AVECS},
         move_rep::{Move, MoveExt, MoveList},
     },
 };
@@ -75,7 +75,54 @@ pub fn get_bishop_attacks(board: &Board, index: usize) -> Bitboard {
         }
     }
 
-    let mut copy = bb;
+    bb
+}
+
+pub fn get_rook_attacks(board: &Board, index: usize) -> Bitboard {
+    let mut bb: Bitboard = 0;
+
+    let avec = ROOK_AVECS[index];
+
+    let blockers = avec & board.get_occupied_squares();
+
+    let (file, rank) = idx_to_file_rank(index as u8);
+
+    // South
+    for i in 1..rank + 1 {
+        let r = rank - i;
+        let sq = (1 as u64) << idx_from_file_rank(file, r);
+        bb |= sq;
+        if sq & blockers > 0 {
+            break;
+        }
+    }
+    // West
+    for i in 1..file + 1 {
+        let f = file - i;
+        let sq = (1 as u64) << idx_from_file_rank(f, rank);
+        bb |= sq;
+        if sq & blockers > 0 {
+            break;
+        }
+    }
+    // North
+    for i in 1..8 - rank {
+        let r = rank + i;
+        let sq = (1 as u64) << idx_from_file_rank(file, r);
+        bb |= sq;
+        if sq & blockers > 0 {
+            break;
+        }
+    }
+    // East
+    for i in 1..8 - file {
+        let f = file + i;
+        let sq = (1 as u64) << idx_from_file_rank(f, rank);
+        bb |= sq;
+        if sq & blockers > 0 {
+            break;
+        }
+    }
 
     bb
 }
@@ -84,6 +131,8 @@ pub trait MoveListExt {
     fn gen_knight_moves(&mut self, board: &Board, color: Color);
     fn gen_king_moves(&mut self, board: &Board, color: Color);
     fn gen_bishop_moves(&mut self, board: &Board, color: Color);
+    fn gen_rook_moves(&mut self, board: &Board, color: Color);
+    fn gen_queen_moves(&mut self, board: &Board, color: Color);
 }
 
 impl MoveListExt for MoveList {
@@ -125,19 +174,53 @@ impl MoveListExt for MoveList {
 
     fn gen_bishop_moves(&mut self, board: &Board, color: Color) {
         let us = [board.white_bb, board.black_bb][color as usize];
-        let opp = [board.black_bb, board.white_bb][color as usize];
         let mut bishops = board.bishop_bbs[color as usize];
 
-        let mut from = 1;
+        let mut from = bishops.pop_lsb();
         while from > 0 {
-            from = bishops.pop_lsb();
-
             let mut moves_bb = get_bishop_attacks(board, from) & !us;
-            let mut to /* stfu about the names here */ = 1;
+            let mut to = moves_bb.pop_lsb();
             while to > 0 {
+                let m = Move::new(from as u8, to as u8);
+                self.push(m);
                 to = moves_bb.pop_lsb();
-                self.push(Move::new(from as u8, to as u8));
             }
-        } 
+            from = bishops.pop_lsb();
+        }
+    }
+
+    fn gen_rook_moves(&mut self, board: &Board, color: Color) {
+        let us = [board.white_bb, board.black_bb][color as usize];
+        let mut rooks = board.rook_bbs[color as usize];
+
+        let mut from = rooks.pop_lsb();
+        while from > 0 {
+            let mut moves_bb = get_rook_attacks(board, from) & !us;
+            let mut to = moves_bb.pop_lsb();
+            while to > 0 {
+                let m = Move::new(from as u8, to as u8);
+                self.push(m);
+                to = moves_bb.pop_lsb();
+            }
+            from = rooks.pop_lsb();
+        }
+    }
+
+    fn gen_queen_moves(&mut self, board: &Board, color: Color) {
+        let us = [board.white_bb, board.black_bb][color as usize];
+        let mut queens = board.queen_bbs[color as usize];
+
+        let mut from = queens.pop_lsb();
+        while from > 0 {
+            let mut moves_bb =
+                (get_rook_attacks(board, from) | get_bishop_attacks(board, from)) & !us;
+            let mut to = moves_bb.pop_lsb();
+            while to > 0 {
+                let m = Move::new(from as u8, to as u8);
+                self.push(m);
+                to = moves_bb.pop_lsb();
+            }
+            from = queens.pop_lsb();
+        }
     }
 }

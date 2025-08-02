@@ -160,9 +160,12 @@ impl Board {
     pub fn get_moves(&self) -> MoveList {
         let mut moves: MoveList = vec![];
 
-        moves.gen_knight_moves(self, if self.wtm {Color::White} else {Color::Black});
-        moves.gen_king_moves(self, if self.wtm {Color::White} else {Color::Black});
-        moves.gen_bishop_moves(self, if self.wtm {Color::White} else {Color::Black});
+        let c = if self.wtm {Color::White} else {Color::Black};
+        moves.gen_knight_moves(self, c);
+        moves.gen_king_moves(self, c);
+        moves.gen_bishop_moves(self, c);
+        moves.gen_rook_moves(self, c);
+        moves.gen_queen_moves(self, c);
 
         moves
     }
