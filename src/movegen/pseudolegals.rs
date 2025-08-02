@@ -204,7 +204,7 @@ impl MoveListExt for MoveList {
             }
             from = rooks.pop_lsb();
         }
-    }
+    } 
 
     fn gen_queen_moves(&mut self, board: &Board, color: Color) {
         let us = [board.white_bb, board.black_bb][color as usize];

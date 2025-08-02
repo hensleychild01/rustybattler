@@ -1,5 +1,6 @@
-use crate::bitboards::Bitboard;
+use crate::bitboards::{Bitboard, BitboardExt};
 use crate::enums::{Color, PieceType};
+use crate::movegen::attack_vectors::{CROWNIES_AVECS, HORSEY_AVECS};
 use crate::movegen::move_rep::MoveList;
 use crate::movegen::pseudolegals::MoveListExt;
 
@@ -39,7 +40,7 @@ pub struct Board {
     pub white_bb: Bitboard,
     pub black_bb: Bitboard
 }
-
+ 
 pub static STARTING_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 // a1-h8
@@ -155,6 +156,50 @@ impl Board {
 
     pub fn get_occupied_squares(&self) -> Bitboard {
         self.white_bb | self.black_bb
+    }
+
+    pub fn get_knight_targets(&self) -> Bitboard {
+        let color = if self.wtm {Color::White} else {Color::Black};
+        let mut knights = self.knight_bbs[color as usize];
+        let us = [self.white_bb, self.black_bb][color as usize];
+        let mut from = knights.pop_lsb();
+
+        let mut bb: Bitboard = 0;
+
+        while from > 0 {
+            let mut not_blocked = HORSEY_AVECS[from as usize] & !us;
+
+            let mut index = not_blocked.pop_lsb();
+            while index > 0 {
+                let to = index;
+                bb |= (1 as u64) << to;
+                index = not_blocked.pop_lsb();
+            }
+
+            from = knights.pop_lsb();
+        }
+
+        bb
+    }
+
+    pub fn get_king_targets(&self) -> Bitboard {
+        let color = if self.wtm {Color::White} else {Color::Black};
+        let mut kings = self.king_bbs[color as usize];
+        let us = [self.white_bb, self.black_bb][color as usize];
+
+        let mut bb: Bitboard = 0;
+
+        let from = kings.pop_lsb();
+
+        let mut not_blocked = CROWNIES_AVECS[from] & !us;
+
+        let mut index = not_blocked.pop_lsb();
+        while index > 0 {
+            bb |= (1 as u64) << index;
+            index = not_blocked.pop_lsb();
+        }
+
+        bb
     }
 
     pub fn get_moves(&self) -> MoveList {
