@@ -42,7 +42,7 @@ impl BitboardExt for Bitboard {
     }
     fn pop_lsb(&mut self) -> usize {
         let trailers = self.trailing_zeros() as usize;
-        if trailers == 64 {return 0;}
+        if trailers == 64 {return 65;}
         *self ^= (1 as u64) << trailers;
         trailers
     }

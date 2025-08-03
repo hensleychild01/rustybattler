@@ -140,11 +140,11 @@ impl MoveListExt for MoveList {
         let mut knights = board.knight_bbs[color as usize];
         let us = [board.white_bb, board.black_bb][color as usize];
         let mut from = knights.pop_lsb();
-        while from > 0 {
+        while from != 65 {
             let mut not_blocked = HORSEY_AVECS[from] & !us;
 
             let mut index = not_blocked.pop_lsb();
-            while index > 0 {
+            while index != 65 {
                 let to = index;
                 let m = Move::new(from as u8, to as u8);
                 self.push(m);
@@ -164,7 +164,7 @@ impl MoveListExt for MoveList {
         let mut not_blocked = CROWNIES_AVECS[from] & !us;
 
         let mut index = not_blocked.pop_lsb();
-        while index > 0 {
+        while index != 65 {
             let to = index;
             let m = Move::new(from as u8, to as u8);
             self.push(m);
@@ -177,10 +177,10 @@ impl MoveListExt for MoveList {
         let mut bishops = board.bishop_bbs[color as usize];
 
         let mut from = bishops.pop_lsb();
-        while from > 0 {
+        while from != 65 {
             let mut moves_bb = get_bishop_attacks(board, from) & !us;
             let mut to = moves_bb.pop_lsb();
-            while to > 0 {
+            while to != 65 {
                 let m = Move::new(from as u8, to as u8);
                 self.push(m);
                 to = moves_bb.pop_lsb();
@@ -194,10 +194,10 @@ impl MoveListExt for MoveList {
         let mut rooks = board.rook_bbs[color as usize];
 
         let mut from = rooks.pop_lsb();
-        while from > 0 {
+        while from != 65 {
             let mut moves_bb = get_rook_attacks(board, from) & !us;
             let mut to = moves_bb.pop_lsb();
-            while to > 0 {
+            while to != 65 {
                 let m = Move::new(from as u8, to as u8);
                 self.push(m);
                 to = moves_bb.pop_lsb();

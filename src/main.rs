@@ -1,8 +1,11 @@
 use crate::{
-    bitboards::{Bitboard, BitboardExt}, board::Board, movegen::{
+    bitboards::{Bitboard, BitboardExt},
+    board::Board,
+    enums::Color,
+    movegen::{
         move_rep::{MoveList, MoveListPrettyPrint},
-        pseudolegals::{get_bishop_attacks, MoveListExt},
-    }
+        pseudolegals::{MoveListExt, get_bishop_attacks},
+    },
 };
 
 mod bitboards;
@@ -12,6 +15,6 @@ mod movegen;
 
 fn main() {
     let mut game = Board::get_empty_board();
-    game.load_fen("2b5/p2NBp1p/1bp1nPPr/3P4/2pRnr1P/1k1B1Ppp/1P1P1pQP/Rq1N3K b - - 0 1");
-    game.get_king_targets().print();
+    game.load_fen("2b5/p2NBp1p/1bp1nPPr/3P4/2pRnr1P/1k1B1Ppp/1P1P1pQP/Rq1N3K w - - 0 1");
+    game.get_all_targets(Color::White).print();
 }

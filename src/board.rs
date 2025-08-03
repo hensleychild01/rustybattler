@@ -1,8 +1,8 @@
 use crate::bitboards::{Bitboard, BitboardExt};
 use crate::enums::{Color, PieceType};
-use crate::movegen::attack_vectors::{CROWNIES_AVECS, HORSEY_AVECS};
+use crate::movegen::attack_vectors::{BISHOP_AVECS, CROWNIES_AVECS, HORSEY_AVECS, ROOK_AVECS};
 use crate::movegen::move_rep::MoveList;
-use crate::movegen::pseudolegals::MoveListExt;
+use crate::movegen::pseudolegals::{MoveListExt, get_bishop_attacks};
 
 #[derive(Copy, Clone)]
 pub struct Square {
@@ -11,7 +11,7 @@ pub struct Square {
 }
 
 pub fn idx_to_file_rank(idx: u8) -> (u8, u8) {
-    let file = (idx as u8) & (7 as u8); 
+    let file = (idx as u8) & (7 as u8);
     let rank = (idx as u8) >> 3;
     (file, rank)
 }
@@ -38,9 +38,9 @@ pub struct Board {
     pub mailbox: [Square; 64],
 
     pub white_bb: Bitboard,
-    pub black_bb: Bitboard
+    pub black_bb: Bitboard,
 }
- 
+
 pub static STARTING_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 // a1-h8
@@ -158,19 +158,18 @@ impl Board {
         self.white_bb | self.black_bb
     }
 
-    pub fn get_knight_targets(&self) -> Bitboard {
-        let color = if self.wtm {Color::White} else {Color::Black};
+    pub fn get_knight_targets(&self, color: Color) -> Bitboard {
         let mut knights = self.knight_bbs[color as usize];
         let us = [self.white_bb, self.black_bb][color as usize];
         let mut from = knights.pop_lsb();
 
         let mut bb: Bitboard = 0;
 
-        while from > 0 {
+        while from != 65 {
             let mut not_blocked = HORSEY_AVECS[from as usize] & !us;
 
             let mut index = not_blocked.pop_lsb();
-            while index > 0 {
+            while index != 65 {
                 let to = index;
                 bb |= (1 as u64) << to;
                 index = not_blocked.pop_lsb();
@@ -182,8 +181,7 @@ impl Board {
         bb
     }
 
-    pub fn get_king_targets(&self) -> Bitboard {
-        let color = if self.wtm {Color::White} else {Color::Black};
+    pub fn get_king_targets(&self, color: Color) -> Bitboard {
         let mut kings = self.king_bbs[color as usize];
         let us = [self.white_bb, self.black_bb][color as usize];
 
@@ -194,7 +192,7 @@ impl Board {
         let mut not_blocked = CROWNIES_AVECS[from] & !us;
 
         let mut index = not_blocked.pop_lsb();
-        while index > 0 {
+        while index != 65 {
             bb |= (1 as u64) << index;
             index = not_blocked.pop_lsb();
         }
@@ -202,15 +200,168 @@ impl Board {
         bb
     }
 
+    fn get_bishop_attacks(&self, index: usize) -> Bitboard {
+        let mut bb: Bitboard = 0;
+
+        let avec = BISHOP_AVECS[index];
+
+        let blockers = avec & self.get_occupied_squares();
+
+        let (file, rank) = idx_to_file_rank(index as u8);
+
+        // Southwest
+        let mut limiter = std::cmp::min(file, rank);
+        for i in 1..limiter + 1 {
+            let f = file - i;
+            let r = rank - i;
+            let sq = (1 as u64) << idx_from_file_rank(f, r);
+            bb |= sq;
+            if sq & blockers > 0 {
+                break;
+            }
+        }
+        // Northwest
+        limiter = std::cmp::min(file, 7 - rank);
+        for i in 1..limiter + 1 {
+            let f = file - i;
+            let r = rank + i;
+            let sq = (1 as u64) << idx_from_file_rank(f, r);
+            bb |= sq;
+            if sq & blockers > 0 {
+                break;
+            }
+        }
+        // Northeast
+        limiter = std::cmp::min(7 - file, 7 - rank);
+        for i in 1..limiter + 1 {
+            let f = file + i;
+            let r = rank + i;
+            let sq = (1 as u64) << idx_from_file_rank(f, r);
+            bb |= sq;
+            if sq & blockers > 0 {
+                break;
+            }
+        }
+        // Southeast
+        limiter = std::cmp::min(7 - file, rank);
+        for i in 1..limiter + 1 {
+            let f = file + i;
+            let r = rank - i;
+            let sq = (1 as u64) << idx_from_file_rank(f, r);
+            bb |= sq;
+            if sq & blockers > 0 {
+                break;
+            }
+        }
+
+        bb
+    }
+
+    pub fn get_bishop_targets(&self, color: Color) -> Bitboard {
+        let us = [self.white_bb, self.black_bb][color as usize];
+        let mut bishops = self.bishop_bbs[color as usize];
+
+        let mut bb: Bitboard = 0;
+
+        let mut from = bishops.pop_lsb();
+        while from != 65 {
+            let mut moves_bb = self.get_bishop_attacks(from) & !us;
+            let mut to = moves_bb.pop_lsb();
+            while to != 65 {
+                bb |= (1 as u64) << to;
+                to = moves_bb.pop_lsb();
+            }
+            from = bishops.pop_lsb();
+        }
+
+        bb
+    }
+
+    fn get_rook_attacks(&self, index: usize) -> Bitboard {
+        let mut bb: Bitboard = 0;
+
+        let avec = ROOK_AVECS[index];
+
+        let blockers = avec & self.get_occupied_squares();
+
+        let (file, rank) = idx_to_file_rank(index as u8);
+
+        // South
+        for i in 1..rank + 1 {
+            let r = rank - i;
+            let sq = (1 as u64) << idx_from_file_rank(file, r);
+            bb |= sq;
+            if sq & blockers > 0 {
+                break;
+            }
+        }
+        // West
+        for i in 1..file + 1 {
+            let f = file - i;
+            let sq = (1 as u64) << idx_from_file_rank(f, rank);
+            bb |= sq;
+            if sq & blockers > 0 {
+                break;
+            }
+        }
+        // North
+        for i in 1..8 - rank {
+            let r = rank + i;
+            let sq = (1 as u64) << idx_from_file_rank(file, r);
+            bb |= sq;
+            if sq & blockers > 0 {
+                break;
+            }
+        }
+        // East
+        for i in 1..8 - file {
+            let f = file + i;
+            let sq = (1 as u64) << idx_from_file_rank(f, rank);
+            bb |= sq;
+            if sq & blockers > 0 {
+                break;
+            }
+        }
+
+        bb
+    }
+
+    pub fn get_rook_targets(&self, color: Color) -> Bitboard {
+        let us = [self.white_bb, self.black_bb][color as usize];
+        let mut rooks = self.rook_bbs[color as usize];
+
+        let mut bb: Bitboard = 0;
+
+        let mut from = rooks.pop_lsb();
+        while from != 65 {
+            let mut moves_bb = self.get_rook_attacks(from) & !us;
+            let mut to = moves_bb.pop_lsb();
+            while to != 65 {
+                bb |= (1 as u64) << to;
+                to = moves_bb.pop_lsb();
+            }
+            from = rooks.pop_lsb();
+        }
+        bb
+    }
+
+    pub fn get_queen_targets(&self, color: Color) -> Bitboard {
+        self.get_bishop_targets(color) | self.get_rook_targets(color)
+    }
+
+    pub fn get_all_targets(&self, color: Color) -> Bitboard {
+        self.get_knight_targets(color)
+            | self.get_king_targets(color)
+            | self.get_bishop_targets(color)
+            | self.get_rook_targets(color)
+            | self.get_queen_targets(color)
+    }
+
     pub fn get_moves(&self) -> MoveList {
         let mut moves: MoveList = vec![];
 
-        let c = if self.wtm {Color::White} else {Color::Black};
-        moves.gen_knight_moves(self, c);
-        moves.gen_king_moves(self, c);
-        moves.gen_bishop_moves(self, c);
+        let c = if self.wtm { Color::White } else { Color::Black };
         moves.gen_rook_moves(self, c);
-        moves.gen_queen_moves(self, c);
 
         moves
     }
