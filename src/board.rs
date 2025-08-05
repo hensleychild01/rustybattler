@@ -1,8 +1,9 @@
 use crate::bitboards::{Bitboard, BitboardExt};
 use crate::enums::{Color, PieceType};
-use crate::movegen::attack_vectors::{BISHOP_AVECS, CROWNIES_AVECS, HORSEY_AVECS, ROOK_AVECS};
-use crate::movegen::move_rep::MoveList;
-use crate::movegen::pseudolegals::{MoveListExt, get_bishop_attacks};
+use crate::movegen::attack_vectors::{
+    BISHOP_AVECS, CROWNIES_AVECS, HORSEY_AVECS, PAWN_AVECS, ROOK_AVECS,
+};
+use crate::movegen::pseudolegals::gen_file_mask;
 
 #[derive(Copy, Clone)]
 pub struct Square {
@@ -349,21 +350,41 @@ impl Board {
         self.get_bishop_targets(color) | self.get_rook_targets(color)
     }
 
+    pub fn get_pawn_targets(&self, color: Color) -> Bitboard {
+        let mut pawns = self.pawn_bbs[color as usize];
+        let us = [self.white_bb, self.black_bb][color as usize];
+        let opp = [self.black_bb, self.white_bb][color as usize];
+        let mut from = pawns.pop_lsb();
+
+        let mut bb = 0;
+
+        while from != 65 {
+            let not_blocked = PAWN_AVECS[from as usize] & !us;
+            let (file, _rank) = idx_to_file_rank(from as u8);
+            let not_capture = not_blocked & gen_file_mask(file);
+            let captures = (not_blocked & !not_capture) & opp;
+            let mut valids = not_capture | captures;
+
+            let mut index = valids.pop_lsb();
+            while index != 65 {
+                let to = index;
+                bb |= (1 as u64) << to;
+                index = valids.pop_lsb();
+            }
+
+            from = pawns.pop_lsb();
+        }
+
+        bb
+    }
+
     pub fn get_all_targets(&self, color: Color) -> Bitboard {
         self.get_knight_targets(color)
             | self.get_king_targets(color)
             | self.get_bishop_targets(color)
             | self.get_rook_targets(color)
             | self.get_queen_targets(color)
-    }
-
-    pub fn get_moves(&self) -> MoveList {
-        let mut moves: MoveList = vec![];
-
-        let c = if self.wtm { Color::White } else { Color::Black };
-        moves.gen_rook_moves(self, c);
-
-        moves
+            | self.get_pawn_targets(color)
     }
 }
 
