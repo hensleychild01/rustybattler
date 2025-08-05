@@ -71,6 +71,91 @@ impl Board {
         self.load_fen(STARTING_FEN);
     }
 
+    pub fn add_piece(&mut self, color: Color, piece: PieceType, index: usize) {
+        let is_white = color == Color::White;
+        let color_idx = color as usize;
+
+        let bb = (1 as u64) << index;
+
+        if is_white {
+            self.white_bb |= bb;
+        } else {
+            self.black_bb |= bb;
+        }
+
+        self.mailbox[index].color = color;
+
+        match piece {
+            PieceType::Pawn => {
+                self.pawn_bbs[color_idx] |= bb;
+            }
+            PieceType::Knight => {
+                self.knight_bbs[color_idx] |= bb;
+            }
+            PieceType::Bishop => {
+                self.bishop_bbs[color_idx] |= bb;
+            }
+            PieceType::Rook => {
+                self.rook_bbs[color_idx] |= bb;
+            }
+            PieceType::Queen => {
+                self.queen_bbs[color_idx] |= bb;
+            }
+            PieceType::King => {
+                self.king_bbs[color_idx] |= bb;
+            }
+            _ => {}
+        }
+    }
+
+    pub fn remove_piece(&mut self, index: usize) -> (Color, PieceType) {
+        let color = self.mailbox[index].color;
+        let piece = self.mailbox[index].piece;
+
+        let bb = (1 as u64) << index;
+
+        self.mailbox[index] = Square {
+            piece: PieceType::None,
+            color: Color::None,
+        };
+
+        if color == Color::White {
+            self.white_bb &= !bb;
+        } else {
+            self.black_bb &= !bb;
+        }
+
+        match piece {
+            PieceType::Pawn => {
+                self.pawn_bbs[color as usize] &= !bb;
+            }
+            PieceType::Knight => {
+                self.knight_bbs[color as usize] &= !bb;
+            }
+            PieceType::Bishop => {
+                self.bishop_bbs[color as usize] &= !bb;
+            }
+            PieceType::Rook => {
+                self.rook_bbs[color as usize] &= !bb;
+            }
+            PieceType::Queen => {
+                self.queen_bbs[color as usize] &= !bb;
+            }
+            PieceType::King => {
+                self.king_bbs[color as usize] &= !bb;
+            }
+            _ => {}
+        }
+
+        (color, piece)
+    }
+
+    pub fn move_piece(&mut self, from: usize, to: usize) {
+        let (color, piece) = self.remove_piece(from);
+        self.remove_piece(to);
+        self.add_piece(color, piece, to);
+    }
+
     pub fn load_fen(&mut self, fen: &str) {
         let split_fen: Vec<&str> = fen.split(' ').collect();
         let position: &str = split_fen[0];
@@ -81,7 +166,6 @@ impl Board {
             color: Color::None,
         }; 64];
 
-        // white first
         self.pawn_bbs = [0; 2];
         self.knight_bbs = [0; 2];
         self.bishop_bbs = [0; 2];
@@ -105,7 +189,6 @@ impl Board {
                 file += c.to_digit(10).unwrap();
             } else {
                 let is_white = c.is_uppercase();
-                let color_idx = if is_white { 0 } else { 1 };
 
                 let mailbox_idx = (rank * 8 + file) as usize;
                 let index: Bitboard = (1 as Bitboard) << mailbox_idx;
@@ -116,33 +199,27 @@ impl Board {
                     self.black_bb |= index;
                 }
 
-                self.mailbox[mailbox_idx].color =
-                    if is_white { Color::White } else { Color::Black };
+                let color = if is_white { Color::White } else { Color::Black };
+                self.mailbox[mailbox_idx].color = color;
 
                 match c.to_lowercase().next().unwrap() {
                     'p' => {
-                        self.pawn_bbs[color_idx] |= index;
-                        self.mailbox[mailbox_idx].piece = PieceType::Pawn;
+                        self.add_piece(color, PieceType::Pawn, mailbox_idx);
                     }
                     'n' => {
-                        self.knight_bbs[color_idx] |= index;
-                        self.mailbox[mailbox_idx].piece = PieceType::Knight;
+                        self.add_piece(color, PieceType::Knight, mailbox_idx);
                     }
                     'b' => {
-                        self.bishop_bbs[color_idx] |= index;
-                        self.mailbox[mailbox_idx].piece = PieceType::Bishop;
+                        self.add_piece(color, PieceType::Bishop, mailbox_idx);
                     }
                     'r' => {
-                        self.rook_bbs[color_idx] |= index;
-                        self.mailbox[mailbox_idx].piece = PieceType::Rook;
+                        self.add_piece(color, PieceType::Rook, mailbox_idx);
                     }
                     'q' => {
-                        self.queen_bbs[color_idx] |= index;
-                        self.mailbox[mailbox_idx].piece = PieceType::Queen;
+                        self.add_piece(color, PieceType::Queen, mailbox_idx);
                     }
                     'k' => {
-                        self.king_bbs[color_idx] |= index;
-                        self.mailbox[mailbox_idx].piece = PieceType::King;
+                        self.add_piece(color, PieceType::King, mailbox_idx);
                     }
                     // ...
                     // lots of tedious code rewriting here

@@ -7,6 +7,7 @@ mod movegen;
 
 fn main() {
     let mut game = Board::get_empty_board();
-    game.load_fen("2b5/p2NBp1p/1bp1nPPr/3P4/2pRnr1P/1k1B1Ppp/1P1P1pQP/Rq1N3K w - - 0 1");
-    game.get_all_targets(Color::White).print();
+    game.init();
+    game.remove_piece(25);
+    game.white_bb.print();
 }
